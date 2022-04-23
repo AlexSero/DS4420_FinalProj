@@ -132,10 +132,10 @@ def preprocess_folders(args):
     if not os.path.exists(args.dest):
         os.mkdir(args.dest)
 
-    trainA = os.listdir(os.path.join(args.root), 'trainA')
-    trainB = os.listdir(os.path.join(args.root), 'trainB')
-    testA = os.listdir(os.path.join(args.root), 'testA')
-    testB = os.listdir(os.path.join(args.root), 'testB')
+    trainA = os.listdir(os.path.join(args.root), 'img_align_celeba/trainA')
+    trainB = os.listdir(os.path.join(args.root), 'img_align_celeba/trainB')
+    testA = os.listdir(os.path.join(args.root), 'img_align_celeba/testA')
+    testB = os.listdir(os.path.join(args.root), 'img_align_celeba/testB')
 
     with open(os.path.join(args.dest, 'testA.txt'), 'w') as f:
         for i, _img in enumerate(testA):
