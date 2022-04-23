@@ -60,7 +60,7 @@ def preprocess_celeba(args):
     # Eyeglasses
     if args.config == 'glasses':
         for line in lines[2:]:
-            line = line.split()
+            line = line.split(",")
             if int(line[16]) == 1:
                 allA.append(line[0])
             elif int(line[16]) == -1:
@@ -69,7 +69,7 @@ def preprocess_celeba(args):
     # Mouth slightly open
     if args.config == 'mouth':
         for line in lines[2:]:
-            line = line.split()
+            line = line.split(",")
             if int(line[22]) == 1:
                 allA.append(line[0])
             else:
@@ -78,7 +78,7 @@ def preprocess_celeba(args):
     # Facial hair
     if args.config == 'beard':
         for line in lines[2:]:
-            line = line.split()
+            line = line.split(",")
             if int(line[21]) == 1 and int(line[1]) == -1 and (int(line[23]) == 1 or int(line[17]) == 1 or int(
                     line[25]) == -1):  # male AND (mustache OR goatee OR beard) AND (no shadow)
                 allA.append(line[0])
@@ -88,7 +88,7 @@ def preprocess_celeba(args):
     # Custom
     if args.config == 'custom':
         for line in lines[2:]:
-            line = line.split()
+            line = line.split(",")
             if int(line[args.custom]) == 1:
                 allA.append(line[0])
             else:
