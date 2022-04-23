@@ -174,7 +174,7 @@ if __name__ == "__main__":
     parser.add_argument("--attributes", default="", help="path to the attributes file")
     parser.add_argument("--num_test_imgs", default=64, help="number of images in the test set")
     parser.add_argument("--config", default="glasses", help="configs available: glasses, mouth, beard")
-    parser.add_argument("--custom", default=32, help="use a custom celeba attribute")
+    parser.add_argument("--custom", default=32, type=int, help="use a custom celeba attribute")
     parser.add_argument("--folders", action="store_true",
                         help="use custom folders, instead of celeba")
 
