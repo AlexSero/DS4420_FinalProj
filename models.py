@@ -234,7 +234,7 @@ class DecoderVAE(nn.Module):
     z_mean = z[:, :half, :, :]
     z_std = z[:, half:, :, :]
     
-    z_std = torch.exp(z_std)
+    z_std = torch.exp(z_std * .5)
     z = Normal(z_mean, z_std).sample()
     z = z.mul(z_std).add_(z_mean)
 

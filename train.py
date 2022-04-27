@@ -9,6 +9,7 @@ import torchvision.transforms as transforms
 from models import E1, E2, Decoder, Disc, VAE1, VAE2, DecoderVAE, DiscVAE, NegativeELBOLoss
 from utils import save_imgs, save_model, load_model
 from utils import CustomDataset
+import math
 
 import argparse
 
@@ -64,7 +65,8 @@ def train(args):
         B_label = B_label.cuda()
         B_separate = B_separate.cuda()
 
-        loss_fn = loss_fn.cuda()
+        if args.type != 'vae':
+          loss_fn = loss_fn.cuda()
         bce = bce.cuda()
 
     ae_params = list(e1.parameters()) + list(e2.parameters()) + list(decoder.parameters())
@@ -84,10 +86,13 @@ def train(args):
 
     print('Started training...')
     while True:
+    #for epoch in range(args.epochs):
+        accumulated_loss = 0
         domA_loader = torch.utils.data.DataLoader(domA_train, batch_size=args.bs,
                                                   shuffle=True, num_workers=6)
         domB_loader = torch.utils.data.DataLoader(domB_train, batch_size=args.bs,
                                                   shuffle=True, num_workers=6)
+        
         if _iter >= args.iters:
             break
 
@@ -141,10 +146,14 @@ def train(args):
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(disc_params, 5)
                 disc_optimizer.step()
+            
+            accumulated_loss += loss
 
+            
             if _iter % args.progress_iter == 0:
                 print('Outfile: %s <<>> Iteration %d' % (args.out, _iter))
 
+            
             if _iter % args.display_iter == 0:
                 e1 = e1.eval()
                 e2 = e2.eval()
@@ -159,8 +168,12 @@ def train(args):
             if _iter % args.save_iter == 0:
                 save_file = os.path.join(args.out, 'checkpoint')
                 save_model(save_file, e1, e2, decoder, ae_optimizer, disc, disc_optimizer, _iter)
-
+            
             _iter += 1
+        
+        with open(args.out + '/loss.txt', 'a') as f:
+          f.write(str(accumulated_loss.item() / min(len(domA_train), len(domB_train)) / args.bs) + '\n')
+        
 
 
 if __name__ == '__main__':
@@ -181,6 +194,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', default='')
     parser.add_argument('--num_display', type=int, default=12)
     parser.add_argument('--type', default='')
+    parser.add_argument('--epochs', type=int, default=10)
 
     args = parser.parse_args()
 
