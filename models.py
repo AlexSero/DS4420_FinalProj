@@ -122,7 +122,7 @@ class Disc(nn.Module):
 
 class DiscVAE(nn.Module):
     def __init__(self, sep, size):
-        super(Disc, self).__init__()
+        super(DiscVAE, self).__init__()
         self.sep = sep
         self.size = size
 
