@@ -31,7 +31,11 @@ def save_imgs(args, e1, e2, decoder, iters):
                 common_B = e1(test_domB[j].unsqueeze(0))
 
                 BA_encoding = torch.cat([common_B, separate_A], dim=1)
-                BA_decoding = decoder(BA_encoding)
+                if args.type == 'vae':
+                    _, BA_decoding = decoder(BA_encoding)
+                else:
+                    BA_decoding = decoder(BA_encoding)
+                
                 exps.append(BA_decoding)
 
     with torch.no_grad():

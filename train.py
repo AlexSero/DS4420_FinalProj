@@ -6,7 +6,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
-from models import E1, E2, Decoder, Disc
+from models import E1, E2, Decoder, Disc, VAE1, VAE2, DecoderVAE, DiscVAE, NegativeELBOLoss
 from utils import save_imgs, save_model, load_model
 from utils import CustomDataset
 
@@ -32,14 +32,26 @@ def train(args):
 
     A_label = torch.full((args.bs,), 1, dtype=torch.float)
     B_label = torch.full((args.bs,), 0, dtype=torch.float)
-    B_separate = torch.full((args.bs, args.sep * (args.resize // 64) * (args.resize // 64)), 0, dtype=torch.float)
+    
+    if args.type == 'vae':
+        B_separate = torch.full((args.bs, args.sep * 2 * (args.resize // 64) * (args.resize // 64)), 0, dtype=torch.float)
 
-    e1 = E1(args.sep, args.resize // 64)
-    e2 = E2(args.sep, args.resize // 64)
-    decoder = Decoder(args.resize // 64)
-    disc = Disc(args.sep, args.resize // 64)
+        e1 = VAE1(args.sep, args.resize // 64)
+        e2 = VAE2(args.sep, args.resize // 64)
+        decoder = DecoderVAE(args.resize // 64)
+        loss_fn = NegativeELBOLoss(beta=1e-3)
+        
+        disc = DiscVAE(args.sep, args.resize // 64)
+    else:
+        B_separate = torch.full((args.bs, args.sep * (args.resize // 64) * (args.resize // 64)), 0, dtype=torch.float)
 
-    mse = nn.MSELoss()
+        e1 = E1(args.sep, args.resize // 64)
+        e2 = E2(args.sep, args.resize // 64)
+        decoder = Decoder(args.resize // 64)
+        loss_fn = nn.MSELoss()
+
+        disc = Disc(args.sep, args.resize // 64)
+
     bce = nn.BCELoss()
 
     if torch.cuda.is_available():
@@ -52,7 +64,7 @@ def train(args):
         B_label = B_label.cuda()
         B_separate = B_separate.cuda()
 
-        mse = mse.cuda()
+        loss_fn = loss_fn.cuda()
         bce = bce.cuda()
 
     ae_params = list(e1.parameters()) + list(e2.parameters()) + list(decoder.parameters())
@@ -101,11 +113,10 @@ def train(args):
 
             B_common = e1(domB_img)
             B_encoding = torch.cat([B_common, B_separate], dim=1)
-
             A_decoding = decoder(A_encoding)
             B_decoding = decoder(B_encoding)
 
-            loss = mse(A_decoding, domA_img) + mse(B_decoding, domB_img)
+            loss = loss_fn(A_decoding, domA_img) + loss_fn(B_decoding, domB_img)
 
             if args.discweight > 0:
                 preds_A = disc(A_common)
@@ -169,6 +180,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_iter', type=int, default=10000)
     parser.add_argument('--load', default='')
     parser.add_argument('--num_display', type=int, default=12)
+    parser.add_argument('--type', default='')
 
     args = parser.parse_args()
 
